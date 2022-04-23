@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>News - FrikyBot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- GENERAL CSS -->
+    <link href="../../styles/standard.css" rel="stylesheet">
+    <link href="../../styles/Grid/Grid_Foundation.css" rel="stylesheet">
+
+    <!-- PAGE CSS-->
+    <link href="../../styles/Grid/Grid_Default.css" rel="stylesheet">
+
+    <!-- GENERAL JS-->
+    <script src="../../scripts/standard.js"></script>
+
+    <!-- MISC -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400&display=swap" rel="stylesheet">
+
+    <script src="../misc/NavigationV2/NavigationV2.js"></script>
+    <link href="../misc/NavigationV2/NavigationV2.css" rel="stylesheet">
+
+    <script src="../misc/OUTPUT/OUTPUT.js"></script>
+    <link href="../misc/OUTPUT/OUTPUT.css" rel="stylesheet">
+
+    <script src="../misc/BOT_STATUS/BOT_STATUS.js"></script>
+    <link href="../misc/BOT_STATUS/BOT_STATUS.css" rel="stylesheet">
+
+    <script src="../misc/Login/Login.js"></script>
+    <link href="../misc/Login/Login.css" rel="stylesheet">
+
+    <script src="../News/News_scripts"></script>
+    <link href="../News/News_styles" rel="stylesheet">
+
+    <script src="../misc/SwitchButton/SwitchButton.js"></script>
+    <link href="../misc/SwitchButton/SwitchButton.css" rel="stylesheet">
+
+
+    <style>
+        .darkmode #grid #content {
+            background-color: #292929 !important;
+            color: white;
+        }
+
+        #ALL_NEWS_HEADER {
+            position: relative;
+        }
+
+            #ALL_NEWS_HEADER a {
+                float: right;
+                font-size: 20px;
+                color: #2ab89b;
+                padding: 0 10px;
+            }
+
+                #ALL_NEWS_HEADER a:hover {
+                    filter: brightness(90%);
+                }
+
+        #NEWS_SWITCH {
+            display: none;
+            margin-top: 3px;
+            font-size: 15px;
+            position: absolute;
+            right: 300px;
+        }
+
+            #NEWS_SWITCH > span {
+                position: absolute;
+                top: 2px;
+                left: -90px;
+            }
+
+        #DropItHere {
+            margin-top: 30px;
+            position: relative;
+        }
+
+        #AUTH_UI {
+            position: absolute;
+            right: 0;
+            top: -35px;
+        }
+
+            #AUTH_UI span {
+                display: inline-block;
+                padding: 4px 5px 1px 5px;
+                border-radius: 3px;
+                margin-left: 5px;
+                cursor: pointer;
+            }
+
+                #AUTH_UI span:hover {
+                    background-color: rgba(0, 0, 0, 0.1);
+                }
+
+                #AUTH_UI span img {
+                    height: 20px;
+                }
+
+                #AUTH_UI span #DEL_BTN {
+                    filter: invert(30%) sepia(39%) saturate(5976%) hue-rotate(344deg) brightness(96%) contrast(94%);
+                }
+
+                #AUTH_UI span #EDT_BTN {
+                    filter: invert(91%) sepia(58%) saturate(1581%) hue-rotate(330deg) brightness(99%) contrast(88%);
+                }
+    </style>
+</head>
+<body onload="Standard_Page_Init(); init();">
+    <!-- MAIN GRID -->
+    <div id="grid">
+        <!-- NAVI HEADER -->
+        <div class="cellM" id="naviHeader">
+            <a href="../../">FRIKY<span>BOT</span></a>
+        </div>
+
+        <!-- CONTENT HEADER -->
+        <div class="cellM" id="contentHeader">
+
+        </div>
+
+        <!-- NAVI -->
+        <div class="cellM" id="navi">
+            <div id="BOT_STATUS_DETAILS_MINI">
+
+            </div>
+            <div id="mainNavi">
+
+            </div>
+            <button id="LightModeButton" onclick="toggleLightMode()">DarkMode</button>
+            <div id="license"> - <a href="https://fontawesome.com/license" target="_blank">Icon license</a> - </div>
+        </div>
+
+        <!-- ACTUAL CONTENT -->
+        <div class="cellM" id="content" style="background-color: #f5f5f5;">
+
+            <script>
+                function init() {
+                    OUTPUT_create();
+                    Bot_Status_Details_Settings.ErrorOutput = OUTPUT_showError;
+                    SWITCHBUTTON_AUTOFILL();
+
+                    //News Display
+                    if (window.location.pathname.toLowerCase() == "/news") {
+                        if (!document.getElementById("NEWS_FEED_Feed"))
+                            document.getElementById("DropItHere").innerHTML = '<div id="NEWS_FEED_Feed"></div>';
+
+                        let scheduled = false;
+
+                        //Authorization
+                        if (LOGIN_isLoggedIn() && USERLEVEL_INDEX(LOGIN_getCookies()['user']['user_level']) > USERLEVEL_INDEX('moderator')) {
+                            document.getElementById('ALL_NEWS_HEADER').innerHTML += '<a href="../News/Newsmaker">NEWSMAKER</a>';
+                            scheduled = getCookie('NEWSFEED_ALLOW_SCHEDULED') == 'true';
+                            SWITCHBUTTON_TOGGLE(document.getElementById('NEWS_SWITCHER'), scheduled);
+                            document.getElementById('NEWS_SWITCH').style.display = 'inline-block';
+                        }
+                        fetchAll(scheduled);
+                    } else {
+                        const page = window.location.pathname.split("/")[2];
+
+                        //Authorization
+                        if (LOGIN_isLoggedIn() && USERLEVEL_INDEX(LOGIN_getCookies()['user']['user_level']) > USERLEVEL_INDEX('moderator')) {
+                            document.getElementById('DropItHere').innerHTML += '<div id="AUTH_UI"><span onclick="window.location.href=\'NewsMaker?page=' + page + '\'"><img id="EDT_BTN" src="../images/icons/pencil-ruler-solid.svg" /></span><span><img id="DEL_BTN" src="../images/icons/trash-alt-solid.svg" onclick="delete_news(\'' + page + '\')"/></span></div>';
+                        }
+
+                        if (!document.getElementById("NEWS_FEED_Feed"))
+                            document.getElementById("DropItHere").innerHTML += '<div id="NEWS_FEED_FullPage"></div>';
+
+                        document.getElementById("ALL_NEWS_HEADER").remove();
+
+                        NEWS_FEED_FETCH_FullPage(page).catch(err => OUTPUT_showError(err.message));
+                    }
+                }
+                async function delete_news(page) {
+                    let answer = 'NO';
+
+                    try {
+                        answer = await MISC_USERCONFIRM("YOU SURE YOU WANT THIS?", "Do you really want to remove this News?");
+                    } catch (err) {
+
+                    }
+
+                    if (answer !== 'YES') return Promise.resolve();
+
+                    let options = getAuthHeader();
+                    options['method'] = 'DELETE';
+                    options['headers']['Content-Type'] = 'application/json';
+                    options['body'] = JSON.stringify({ page });
+
+                    return fetch(NEWS_FEED_SETTINGS.ROOT_URL, options)
+                        .then(STANDARD_FETCH_RESPONSE_CHECKER)
+                        .then(json => {
+                            if (json.removed > 0) {
+                                OUTPUT_showInfo('News Removed! Go back to <a href="./">All News</a>');
+                                document.getElementById('DropItHere').remove();
+                            }
+                            else OUTPUT_showError('News couldnt be removed!');
+                        })
+                        .catch(err => {
+                            OUTPUT_showError(err.message);
+                        });
+                }
+
+                function news_switch(elt) {
+                    fetchAll(elt.value);
+                    setCookie('NEWSFEED_ALLOW_SCHEDULED', elt.value);
+                }
+                function fetchAll(scheduled) {
+                    let first = 5;
+                    NEWS_FEED_FETCH_Feed(null, "first=" + first + (scheduled ? "" : '&end=' + Date.now()), true)
+                        .catch(err => OUTPUT_showError(err.message));
+                }
+            </script>
+
+            <h1 id="ALL_NEWS_HEADER">ALL NEWS <span id="NEWS_SWITCH"><span>SCHEDULED</span><switchbutton id="NEWS_SWITCHER" value="true" onclick="news_switch(this);"></switchbutton></span> <a href="../News/Changelog">CHANGELOGS</a></h1>
+
+            <output></output>
+
+            <div id="DropItHere">
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

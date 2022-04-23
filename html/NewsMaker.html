@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>NewsMaker - FrikyBot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- GENERAL CSS -->
+    <link href="../../styles/standard.css" rel="stylesheet">
+    <link href="../../styles/Grid/Grid_Foundation.css" rel="stylesheet">
+
+    <!-- PAGE CSS-->
+    <link href="../../styles/Grid/Grid_Default.css" rel="stylesheet">
+
+    <!-- GENERAL JS-->
+    <script src="../../scripts/standard.js"></script>
+
+    <!-- MISC -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400&display=swap" rel="stylesheet">
+
+    <script src="../misc/NavigationV2/NavigationV2.js"></script>
+    <link href="../misc/NavigationV2/NavigationV2.css" rel="stylesheet">
+
+    <script src="../misc/OUTPUT/OUTPUT.js"></script>
+    <link href="../misc/OUTPUT/OUTPUT.css" rel="stylesheet">
+
+    <script src="../misc/BOT_STATUS/BOT_STATUS.js"></script>
+    <link href="../misc/BOT_STATUS/BOT_STATUS.css" rel="stylesheet">
+
+    <script src="../misc/Login/Login.js"></script>
+    <link href="../misc/Login/Login.css" rel="stylesheet">
+
+    <script src="../News/News_scripts"></script>
+    <link href="../News/News_styles" rel="stylesheet">
+
+    <script src="../misc/SwitchButton/SwitchButton.js"></script>
+    <link href="../misc/SwitchButton/SwitchButton.css" rel="stylesheet">
+
+    <style>
+        .darkmode #grid #content {
+            background-color: #292929 !important;
+            color: white;
+        }
+    </style>
+
+</head>
+<body onload="Standard_Page_Init(); init();">
+    <!-- MAIN GRID -->
+    <div id="grid">
+        <!-- NAVI HEADER -->
+        <div class="cellM" id="naviHeader">
+            <a href="../../">FRIKY<span>BOT</span></a>
+        </div>
+
+        <!-- CONTENT HEADER -->
+        <div class="cellM" id="contentHeader">
+
+        </div>
+
+        <!-- NAVI -->
+        <div class="cellM" id="navi">
+            <div id="BOT_STATUS_DETAILS_MINI">
+
+            </div>
+            <div id="mainNavi">
+
+            </div>
+            <button id="LightModeButton" onclick="toggleLightMode()">DarkMode</button>
+            <div id="license"> - <a href="https://fontawesome.com/license" target="_blank">Icon license</a> - </div>
+        </div>
+
+        <!-- ACTUAL CONTENT -->
+        <div class="cellM" id="content" style="background-color: #f5f5f5;">
+
+            <script>
+                function init() {
+                    OUTPUT_create();
+                    Bot_Status_Details_Settings.ErrorOutput = OUTPUT_showError;
+
+                    //Fetch / Check Access
+                    fetch(NEWS_FEED_SETTINGS.ROOT_URL + '/files', getAuthHeader())
+                        .then(STANDARD_FETCH_RESPONSE_CHECKER)
+                        .then(json => {
+                            if (json.err) return Promise.reject(new Error('File List couldnt be read :('));
+                            FILES = json.files;
+                        })
+                        .catch(err => {
+                            OUTPUT_showError(err.message);
+                            console.log(err);
+                        });
+
+                    //Check Query
+                    let query = "";
+                    if (GetURLSearchArray().length > 0) query = "?" +  GetURLSearchArray()[0].name + "=" + GetURLSearchArray()[0].value[0];
+
+                    //Fetch / Check Access
+                    fetch(NEWS_FEED_SETTINGS.ROOT_URL + query, getAuthHeader())
+                        .then(STANDARD_FETCH_RESPONSE_CHECKER)
+                        .then(json => {
+                            if (json.err) return Promise.reject(new Error(json.err));
+                            NEWS_FEED_NEWSMAKER_fill(query == "" ? {} : json.data.News[0]);
+                            NEWS_FEED_NEWSMAKER_updatePreview();
+                            document.getElementById('NEWS_FEED_NewsMaker').style.display = "grid";
+                            document.getElementById('SaveBTN').disabled = true;
+                        })
+                        .catch(err => {
+                            OUTPUT_showError('ACCESS DENIED');
+                            console.log(err);
+                        });
+                }
+            </script>
+
+            <output></output>
+
+            <div id="NEWS_FEED_NewsMaker">
+                <div class="Editor">
+                    <h1>NEWS MAKER <button id="SaveBTN" onclick="NEWS_FEED_NEWSMAKER_save()" disabled>SAVE</button></h1>
+                    <div style="position: relative; height: 30px;">
+                        <input id="Editor_Input_Date" type="datetime-local" onchange="NEWS_FEED_NEWSMAKER_updatePreview()" />
+                    </div>
+                    <input id="Editor_Input_Title" placeholder="Title here" oninput="NEWS_FEED_NEWSMAKER_updatePreview(); NEWS_FEED_NEWSMAKER_Title_Change(this);" />
+                    <br />
+                    <textarea id="Editor_Input_Description_Top" placeholder="Top Description here: # -> Headline" oninput="NEWS_FEED_NEWSMAKER_updatePreview()"></textarea><br />
+                    <textarea id="Editor_Input_Description_Bottom" placeholder="Bottom Description here: # -> Headline" oninput="NEWS_FEED_NEWSMAKER_updatePreview()"></textarea><br />
+                    <input id="Editor_Input_Page" placeholder="URL-Friendly Title here" oninput="NEWS_FEED_NEWSMAKER_updatePreview();" /><br />
+
+                    <div>
+                        <div class="List">
+                            <h4>Images</h4>
+                            <button style="grid-area: bt0; background-color: lime; width: 100%; font-size: 15px;" title="Update Images" onclick="NEWS_FEED_NEWSMAKER_updatePreview()">UPDATE</button>
+                            <div class="TrashElement" title="Remove Image" ondragover="NEWS_FEED_NEWSMAKER_allowDrop(event)" ondrop="NEWS_FEED_NEWSMAKER_dropTrash(event)"><img src="../images/icons/trash-alt-solid.svg" /></div>
+                            <button style="grid-area: bt2;" title="Add Image" onclick="NEWS_FEED_NEWSMAKER_ADD_IMAGE()">+</button>
+                            <div id="Image_List">
+
+                            </div>
+                        </div>
+                        <div class="List" style="grid-area: list;">
+                            <h4>Misc</h4>
+                            <button style="grid-area: bt0; background-color: lime; width: 100%; font-size: 15px;" title="Update Images" onclick="NEWS_FEED_NEWSMAKER_updatePreview()">UPDATE</button>
+                            <div class="TrashElement" title="Remove Misc" ondragover="NEWS_FEED_NEWSMAKER_allowDrop(event)" ondrop="NEWS_FEED_NEWSMAKER_dropTrash(event)"><img src="../images/icons/trash-alt-solid.svg" /></div>
+                            <button style="grid-area: bt2;" title="Add Misc" onclick="NEWS_FEED_NEWSMAKER_ADD_MISC()">+</button>
+                            <div id="Misc_List">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="NEWS_FEED_FullPage">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

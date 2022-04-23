@@ -1,0 +1,270 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Changelog - FrikyBot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- GENERAL CSS -->
+    <link href="../../../styles/standard.css" rel="stylesheet">
+    <link href="../../../styles/Grid/Grid_Foundation.css" rel="stylesheet">
+
+    <!-- PAGE CSS-->
+    <link href="../../../styles/Grid/Grid_Default.css" rel="stylesheet">
+    <style>
+        #content {
+            position: relative;
+            background-color: #f5f5f5 !important;
+        }
+
+        #content.EXPANDED {
+            padding-top: 30px !important;
+        }
+
+        .darkmode #grid #content {
+            background-color: #292929 !important;
+            color: white;
+        }
+
+        #ALL_CHANGELOG_HEADER {
+            position: relative;
+        }
+        #ALL_CHANGELOG_HEADER a {
+            float: right;
+            font-size: 20px;
+            color: #2ab89b;
+            padding: 0 10px;
+        }
+
+            #ALL_CHANGELOG_HEADER a:hover {
+                filter: brightness(90%);
+            }
+
+        #CHANGELOG_SWITCH {
+            display: none;
+            margin-top: 3px;
+            font-size: 15px;
+            position: absolute;
+            right: 300px;
+        }
+
+            #CHANGELOG_SWITCH > span {
+                position: absolute;
+                top: 2px;
+                left: -90px;
+            }
+
+        #AUTH_UI {
+            position: absolute;
+            right: 0;
+            top: 0px;
+        }
+            #AUTH_UI a {
+                float: right;
+                font-size: 20px;
+                color: #2ab89b;
+                padding: 0 10px;
+            }
+
+                #AUTH_UI a:hover {
+                    filter: brightness(90%);
+                }
+
+            #AUTH_UI span {
+                display: inline-block;
+                padding: 4px 5px 1px 5px;
+                border-radius: 3px;
+                margin-left: 5px;
+                cursor: pointer;
+            }
+
+                #AUTH_UI span:hover {
+                    background-color: rgba(0, 0, 0, 0.1);
+                }
+
+                #AUTH_UI span img {
+                    height: 20px;
+                }
+
+                #AUTH_UI span #DEL_BTN {
+                    filter: invert(30%) sepia(39%) saturate(5976%) hue-rotate(344deg) brightness(96%) contrast(94%);
+                }
+
+                #AUTH_UI span #EDT_BTN {
+                    filter: invert(91%) sepia(58%) saturate(1581%) hue-rotate(330deg) brightness(99%) contrast(88%);
+                }
+
+        .Changelog {
+            background-color: white;
+            margin: 20px 0;
+        }
+
+        .NO_CHANGELOGS {
+            padding: 5px;
+            border: 1px solid lightgray;
+            font-weight: bold;
+            color: dimgray;
+        }
+    </style>
+
+    <!-- GENERAL JS-->
+    <script src="../../scripts/standard.js"></script>
+
+    <!-- MISC -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900&display=swap" rel="stylesheet">
+
+    <script src="../../../misc/NavigationV2/NavigationV2.js"></script>
+    <link href="../../../misc/NavigationV2/NavigationV2.css" rel="stylesheet">
+
+    <script src="../../../misc/SwitchButton/SwitchButton.js"></script>
+    <link href="../../../misc/SwitchButton/SwitchButton.css" rel="stylesheet">
+
+    <script src="../../../misc/OUTPUT/OUTPUT.js"></script>
+    <link href="../../../misc/OUTPUT/OUTPUT.css" rel="stylesheet">
+
+    <script src="../../../misc/BOT_STATUS/BOT_STATUS.js"></script>
+    <link href="../../../misc/BOT_STATUS/BOT_STATUS.css" rel="stylesheet">
+
+    <script src="../../misc/Login/Login.js"></script>
+    <link href="../../misc/Login/Login.css" rel="stylesheet">
+
+    <script src="../../../News/Changelog_scripts"></script>
+    <link href="../../../News/Changelog_styles" rel="stylesheet">
+
+    <script>
+        function init() {
+            OUTPUT_create();
+
+            Bot_Status_Details_Settings.ErrorOutput = OUTPUT_showError;
+            Bot_Status_Details_Settings.Use_Cookies = false;
+            SWITCHBUTTON_AUTOFILL();
+            
+            if (window.location.pathname.toLowerCase() == "/news/changelog") {
+                let scheduled = false;
+
+                //Authorization
+                if (LOGIN_isLoggedIn() && USERLEVEL_INDEX(LOGIN_getCookies()['user']['user_level']) > USERLEVEL_INDEX('moderator')) {
+                    document.getElementById('ALL_CHANGELOG_HEADER').innerHTML += '<a href="../News/ChangelogMaker">CHANGELOG-MAKER</a>';
+                    scheduled = getCookie('NEWSFEED_ALLOW_SCHEDULED') == 'true';
+                    SWITCHBUTTON_TOGGLE(document.getElementById('CHANGELOG_SWITCHER'), scheduled);
+                    document.getElementById('CHANGELOG_SWITCH').style.display = 'inline-block';
+                }
+                
+                fetchAll(scheduled);
+            } else {
+                const page = window.location.pathname.split("/")[3];
+                document.getElementById('ALL_CHANGELOG_HEADER').remove();
+
+                //Authorization
+                if (LOGIN_isLoggedIn() && USERLEVEL_INDEX(LOGIN_getCookies()['user']['user_level']) > USERLEVEL_INDEX('moderator')) {
+                    document.getElementById('CHANGELOG').innerHTML += '<div id="AUTH_UI"><span><img id="EDT_BTN" src="../../images/icons/pencil-ruler-solid.svg" onclick="window.location.href=\'../ChangelogMaker?page=' + page + '\'"/></span><span><img id="DEL_BTN" src="../../images/icons/trash-alt-solid.svg" onclick="delete_changelog(\'' + page + '\')"/></span></div>';
+                    document.getElementById('content').classList.add('EXPANDED');
+                }
+                
+                fetchChangelog('page=' + page)
+                    .then(json => {
+                        let s = createChangelog(json.Changelogs[0]);
+
+                        if (s === "") s = '<center class="NO_CHANGELOGS">NO CHANGELOGS FOUND</center>';
+                        else s = '<div class="Changelog">' + createChangelog(json.Changelogs[0]) + '</div>';
+                        
+                        document.getElementById('CHANGELOG').innerHTML += s;
+                    })
+                    .catch(err => {
+                        OUTPUT_showError(err.message);
+                        console.log(err);
+                        document.getElementById('CHANGELOG').innerHTML = '<center class="NO_CHANGELOGS">NO CHANGELOGS FOUND</center>';
+                    });
+            }
+        }
+        async function delete_changelog(page) {
+            let answer = 'NO';
+
+            try {
+                answer = await MISC_USERCONFIRM("YOU SURE YOU WANT THIS?", "Do you really want to remove this Changelog?");
+            } catch (err) {
+
+            }
+
+            if (answer !== 'YES') return Promise.resolve();
+
+            let options = getAuthHeader();
+            options['method'] = 'DELETE';
+            options['headers']['Content-Type'] = 'application/json';
+            options['body'] = JSON.stringify({ page });
+
+            return fetch(CHANGLOG_SETTINGS.API_ENDPOINT, options)
+                .then(STANDARD_FETCH_RESPONSE_CHECKER)
+                .then(json => {
+                    if (json.removed > 0) {
+                        OUTPUT_showInfo('Changelog Removed! Go back to <a href="/News/Changelog">All Changelogs</a>');
+                        document.getElementById('CHANGELOG').remove();
+                    }
+                    else OUTPUT_showError('Changelog couldnt be removed!');
+                })
+                .catch(err => {
+                    OUTPUT_showError(err.message);
+                });
+        }
+
+        function changelog_switch(elt) {
+            fetchAll(elt.value);
+            setCookie('NEWSFEED_ALLOW_SCHEDULED', elt.value);
+        }
+        function fetchAll(scheduled) {
+            fetchChangelog(scheduled ? "" : '&end=' + Date.now())
+                .then(json => {
+                    let s = "";
+                    for (let changelog of json.Changelogs) {
+                        s += '<div class="Changelog">' + createChangelog(changelog) + '</div>';
+                    }
+                    if (s === "") s = '<center class="NO_CHANGELOGS">NO CHANGELOGS FOUND</center>';
+                    document.getElementById('CHANGELOG').innerHTML = s;
+                })
+                .catch(err => {
+                    OUTPUT_showError(err.message);
+                    console.log(err);
+                    document.getElementById('CHANGELOG').innerHTML = '<center class="NO_CHANGELOGS">NO CHANGELOGS FOUND</center>';
+                });
+        }
+    </script>
+</head>
+<body onload="Standard_Page_Init(); init();">
+    <!-- MAIN GRID -->
+    <div id="grid">
+        <!-- NAVI HEADER -->
+        <div class="cellM" id="naviHeader">
+            <a href="./../">FRIKY<span>BOT</span></a>
+        </div>
+
+        <!-- CONTENT HEADER -->
+        <div class="cellM" id="contentHeader">
+
+        </div>
+
+        <!-- NAVI -->
+        <div class="cellM" id="navi">
+            <div id="BOT_STATUS_DETAILS_MINI">
+
+            </div>
+            <div id="mainNavi">
+
+            </div>
+            <button id="LightModeButton" onclick="toggleLightMode()">DarkMode</button>
+            <div id="license"> - <a href="https://fontawesome.com/license/free" target="_blank">Icon license</a> - </div>
+        </div>
+
+        <!-- ACTUAL CONTENT -->
+        <div class="cellM" id="content">
+            <output></output>
+
+            <h1 id="ALL_CHANGELOG_HEADER">ALL CHANGELOGS <span id="CHANGELOG_SWITCH"><span>SCHEDULED</span><switchbutton id="CHANGELOG_SWITCHER" value="true" onclick="changelog_switch(this);"></switchbutton></span> <a href="../News">NEWS</a></h1>
+
+            <div id="CHANGELOG">
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

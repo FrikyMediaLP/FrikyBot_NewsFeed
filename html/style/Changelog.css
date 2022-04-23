@@ -1,0 +1,520 @@
+#Changelog_selector > div, #Changelog_selector > b {
+    margin-right: 5px;
+}
+
+#Changelog_selector #FETCH {
+    display: inline-block;
+    border: 1px solid gold;
+    padding: 0 5px;
+    color: darkgoldenrod;
+    background-color: #ffe138;
+    cursor: pointer;
+    font-weight: bold;
+}
+    #Changelog_selector #FETCH[disabled] {
+        filter: grayscale(100%);
+    }
+
+    #Changelog_selector #FETCH:not([disabled]):hover {
+        filter: brightness(105%);
+    }
+
+/*
+    -----------------
+        Changelog
+    -----------------
+*/
+.CHANGELOG {
+    color: #212121;
+    background-color: white;
+    padding: 10px;
+}
+.darkmode .CHANGELOG {
+    color: white;
+    background-color: #4f4f4f;
+}
+
+    /*HEADER*/
+    .CHANGELOG h1 {
+        position: relative;
+    }
+        .CHANGELOG h1 a {
+            text-transform: uppercase;
+            font-weight: 700 !important;
+            font-style: italic;
+            font-size: 40px;
+            color: black;
+            text-decoration: none;
+        }
+        .darkmode .CHANGELOG h1 a {
+            color: white;
+        }
+    .CHANGELOG h1 button {
+        position: absolute;
+        right: 0;
+        bottom: -20px;
+        padding: 5px;
+    }
+
+    .CHANGELOG h1 div {
+        font-size: 15px;
+        margin: 0;
+        color: gray;
+        position: absolute;
+        top: -20px;
+        right: 0px;
+    }
+
+        .CHANGELOG h1 div[scheduled]::before {
+            content: 'SCHEDULED';
+            margin-right: 5px;
+            background-color: gray;
+            padding: 1px 5px;
+            border-radius: 5px;
+            color: white;
+        }
+
+    .CHANGELOG h2 {
+        border-bottom: 1px solid gray;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        position: relative;
+    }
+        .CHANGELOG h2:hover .REF_LINK_IMG {
+            display: inline;
+        }
+
+    .CHANGELOG h3 {
+        font-weight: 600 !important;
+        font-size: 18px;
+        margin: 0;
+        position: relative;
+    }
+        .CHANGELOG h3:hover .REF_LINK_IMG {
+            display: inline;
+        }
+
+    .CHANGELOG .REF_LINK_IMG {
+        display: none;
+        position: absolute;
+        height: 20px;
+        filter: opacity(0.3);
+        cursor: pointer;
+    }
+
+    .CHANGELOG button {
+        border: none;
+        border-radius: 2px;
+        outline: 0;
+        cursor: pointer;
+    }
+
+
+    /*PLAIN*/
+.CHANGELOG p {
+    font-weight: 400 !important;
+    font-size: 18px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+
+    /*LIST*/
+    .CHANGELOG ul {
+        font-weight: 400 !important;
+        margin: 0;
+    }
+        .CHANGELOG ul .COMMENT {
+            list-style: none;
+        }
+
+    /*LINKS*/
+    .CHANGELOG a {
+        color: #19a3ff;
+    }
+
+    /*CHANGES*/
+    .CHANGELOG .PreChanges{
+        padding-top: 40px;
+        margin-top: 10px;
+    }
+
+    .CHANGELOG .CHANGES {
+        border: 2px solid darkgray;
+        border-radius: 3px;
+    }
+
+        .CHANGELOG .CHANGES .Header {
+            font-size: 25px;
+            margin: 0;
+            padding: 5px;
+            display: grid;
+            grid-template-columns: 80px auto 110px;
+        }
+
+            .CHANGELOG .CHANGES .Header .IMG {
+                position: relative;
+            }
+
+                .CHANGELOG .CHANGES .Header .IMG img {
+                    position: absolute;
+                    top: -50px;
+                    background-color: #e6e6e6;
+                    border-radius: 2px;
+                    border: 2px solid white;
+                    height: 70px;
+                    width: 70px;
+                }
+
+            .CHANGELOG .CHANGES .Header p {
+                margin: 0;
+                font-size: 25px;
+                position: relative;
+                font-weight: bold;
+            }
+
+                .CHANGELOG .CHANGES .Header p:hover .REF_LINK_IMG {
+                    display: inline;
+                }
+
+        /*Custom Change Headers*/
+        .CHANGELOG .CHANGES .SERVER {
+            background-color: #028deb;
+            color: white;
+        }
+            .CHANGELOG .CHANGES .SERVER .IMG img {
+                background-color: #fd7214;
+                height: 60px;
+                width: 60px;
+                padding: 5px;
+                filter: invert(1);
+                border-color: black;
+            }
+
+
+        .CHANGELOG .CHANGES .MODULEBASE {
+            background-color: #028deb;
+            color: white;
+        }
+            .CHANGELOG .CHANGES .MODULEBASE .IMG img {
+                background-color: #fd7214;
+                height: 60px;
+                width: 60px;
+                padding: 5px;
+                filter: invert(1);
+                border-color: black;
+            }
+
+        .CHANGELOG .CHANGES .LOGGER {
+            background-color: #028deb;
+            color: white;
+        }
+
+            .CHANGELOG .CHANGES .LOGGER .IMG img {
+                background-color: #fd7214;
+                height: 60px;
+                width: 60px;
+                padding: 5px;
+                filter: invert(1);
+                border-color: black;
+            }
+
+        .CHANGELOG .CHANGES .TWITCHAPI {
+            background-color: #9147ff;
+            color: white;
+        }
+
+        .CHANGELOG .CHANGES .TWITCHIRC {
+            background-color: #b310c2;
+            color: white;
+        }
+
+        .CHANGELOG .CHANGES .WEBAPP {
+            background-color: #028deb;
+            color: white;
+        }
+
+            .CHANGELOG .CHANGES .WEBAPP .IMG img {
+                background-color: #fd7214;
+                height: 60px;
+                width: 60px;
+                padding: 5px;
+                filter: invert(1);
+                border-color: black;
+            }
+
+        .CHANGELOG .CHANGES .DATACOLLECTION {
+            background-color: orange;
+            color: white;
+        }
+
+            .CHANGELOG .CHANGES .DATACOLLECTION .IMG img {
+                background-color: rgb(0, 85, 255);
+                height: 60px;
+                width: 60px;
+                padding: 5px;
+                padding-left: 6px;
+                filter: invert(1);
+                border-color: black;
+            }
+
+        .CHANGELOG .CHANGES .PACKAGE {
+            background-color: orange;
+            color: white;
+        }
+
+            .CHANGELOG .CHANGES .PACKAGE .IMG img {
+                background-color: rgb(0, 85, 255);
+                height: 60px;
+                width: 60px;
+                padding: 5px;
+                padding-left: 6px;
+                filter: invert(1);
+                border-color: black;
+            }
+
+        .CHANGELOG .CHANGES .UTIL {
+            background-color: #32a852;
+            color: white;
+        }
+            .CHANGELOG .CHANGES .UTIL .IMG img {
+                background-color: #cd57ad;
+                height: 60px;
+                width: 60px;
+                padding: 5px;
+                padding-left: 6px;
+                filter: invert(1);
+                border-color: black;
+            }
+
+        .CHANGELOG .CHANGES .ThirdParty {
+            background-color: #5d6afc;
+            color: white;
+        }
+
+        .CHANGELOG .CHANGES .BTTV .IMG img {
+            background-color: #5d6afc;
+        }
+
+        /*CHANGES CONTENT*/
+        .CHANGELOG .CHANGES .CONTENT {
+            padding: 5px;
+        }
+
+            .CHANGELOG .CHANGES .CONTENT h3 {
+                margin-top: 5px;
+                margin-bottom: 0;
+                font-size: 18px;
+            }
+
+            .CHANGELOG .CHANGES .CONTENT p {
+                margin-bottom: 5px;
+            }
+
+            .CHANGELOG .CHANGES .CONTENT ul {
+                margin-top: 0;
+            }
+
+/*
+    -----------------------
+        Changelog Maker
+    -----------------------
+*/
+
+#NEWS_FEED_ChangelogMaker {
+    margin: 15px;
+    height: calc(100% - 55px);
+    display: none;
+    grid-template-columns: minmax(476px, 50%) 50%;
+    grid-template-rows: auto;
+    grid-column-gap: 5px;
+}
+
+
+    #NEWS_FEED_ChangelogMaker > div::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #NEWS_FEED_ChangelogMaker .Editor {
+        padding: 15px;
+        background-color: white;
+    }
+.darkmode #NEWS_FEED_ChangelogMaker .Editor {
+    background-color: #4f4f4f;
+}
+
+        #NEWS_FEED_ChangelogMaker .Editor h1 {
+            margin: 0px;
+        }
+
+            #NEWS_FEED_ChangelogMaker .Editor h1 #SaveBTN {
+                background-color: lime;
+                float: right;
+                width: 130px;
+                cursor: pointer;
+                font-size: 25px;
+                border: none;
+                color: black;
+            }
+                #NEWS_FEED_ChangelogMaker .Editor h1 #SaveBTN[disabled] {
+                    cursor: default;
+                    background-color: gray;
+                }
+
+.darkmode #NEWS_FEED_ChangelogMaker .Editor input {
+    background: none;
+    border-color: white;
+    color: white;
+}
+    .darkmode #NEWS_FEED_ChangelogMaker .Editor input::placeholder {
+        color: gray;
+    }
+
+        #NEWS_FEED_ChangelogMaker .Editor input:not([type="datetime-local"]), #NEWS_FEED_ChangelogMaker .Editor textarea {
+            width: 100%;
+            min-height: 20px;
+            margin-bottom: 5px;
+            outline: none;
+            resize: vertical;
+        }
+
+        #NEWS_FEED_ChangelogMaker .Editor select {
+            outline: none;
+        }
+
+        #NEWS_FEED_ChangelogMaker .Editor #Editor_Input_Date {
+            width: 175px;
+            position: absolute;
+            top: 0;
+            right: -5px;
+        }
+
+        #NEWS_FEED_ChangelogMaker .Editor #Editor_Input_Title {
+            font-size: 30px;
+        }
+
+        /* List*/
+        #NEWS_FEED_ChangelogMaker .Editor .List {
+            position: relative;
+        }
+        #NEWS_FEED_ChangelogMaker .Editor .List > h4 {
+            font-size: 20px;
+            margin: 6px;
+        }
+            #NEWS_FEED_ChangelogMaker .Editor .List > img {
+                position: absolute;
+                top: 0;
+                right: 35px;
+                height: 20px;
+                width: 20px;
+                padding: 5px;
+                cursor: no-drop;
+                background-color: rgba(0, 0, 0, 0.1);
+                filter: invert(50%) sepia(82%) saturate(5074%) hue-rotate(336deg) brightness(113%) contrast(111%);
+            }
+
+            #NEWS_FEED_ChangelogMaker .Editor .List > button {
+                position: absolute;
+                top: 0;
+                right: 0;
+                cursor: pointer;
+                border: none;
+                height: 30px;
+                width: 30px;
+                font-size: 25px;
+            }
+                #NEWS_FEED_ChangelogMaker .Editor .List > button:hover {
+                    filter: brightness(0.9);
+                }
+
+            #NEWS_FEED_ChangelogMaker .Editor .List > .List_Content {
+                border-top: 1px solid gray;
+            }
+
+            /* Element */
+            #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element {
+                display: grid;
+                grid-template-columns: 20px auto 20px;
+                grid-template-rows: auto;
+                margin-top: 5px;
+                background-color: lavender;
+            }
+
+.darkmode #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element {
+    background-color: #914d4d;
+}
+
+                #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element .Element {
+                    background-color: #cacafa;
+                }
+
+                    #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element .Element .Element {
+                        background-color: #b8b8fc;
+                    }
+
+                #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element > div:first-child {
+                    width: 100%;
+                    height: 100%;
+                    position: relative;
+                    border-right: 1px dashed gray;
+                }
+                    #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element > div:first-child > span {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+
+                #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element > div:nth-child(2) {
+                    width: calc(100% - 10px);
+                    padding: 5px;
+                }
+
+                    #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element > div:nth-child(2) > input, #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element > div:nth-child(2) > textarea {
+                        width: calc(100% - 8px);
+                    }
+
+                    #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element > div:nth-child(2) input[type="checkbox"] {
+                        cursor: pointer;
+                    }
+
+                #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element > img {
+                    border-left: 1px dashed gray;
+                    padding: 2px;
+                    width: calc(100% - 4px);
+                    height: calc(100% - 4px);
+                    cursor: move;
+                }
+
+            #NEWS_FEED_ChangelogMaker .Editor .List .List_Content .Element_Content > select:first-child {
+                margin-bottom: 5px;
+            }
+
+                /* CONTENT */
+        #NEWS_FEED_ChangelogMaker .Editor .CHANGELOGMAKER_CHANGES {
+            display: grid;
+            grid-template-columns: auto 50px;
+            grid-template-areas: "inone intwo" "list list";
+        }
+            #NEWS_FEED_ChangelogMaker .Editor .CHANGELOGMAKER_CHANGES > input:first-child {
+                grid-area: inone;
+            }
+            #NEWS_FEED_ChangelogMaker .Editor .CHANGELOGMAKER_CHANGES > input:nth-child(2) {
+                grid-area: intwo;
+            }
+
+        #NEWS_FEED_ChangelogMaker .Editor .CHANGELOGMAKER_CHANGES > .List{
+            grid-area: list;
+        }
+
+        /* SCroll */
+
+    #NEWS_FEED_ChangelogMaker .Editor {
+        height: 100%;
+        overflow-y: scroll;
+    }
+
+    #NEWS_FEED_ChangelogMaker #CHANGELOG_PREVIEW {
+        height: 100%;
+        overflow-y: scroll;
+    }
