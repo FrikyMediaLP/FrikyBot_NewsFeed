@@ -409,6 +409,8 @@ function NEWS_FEED_NEWSMAKER_fill(news) {
 }
 
 function NEWS_FEED_NEWSMAKER_ADD_IMAGE(data = {}) {
+    if (data.source) data.source.split('/News/Custom/')[1];
+
     let s = '<center>' + (document.getElementsByClassName(NEWS_FEED_NEWSMAKER_ELEMENTS.image_class).length + 1) + '</center>';
     s += '<div class="Middle">';
 
@@ -427,7 +429,7 @@ function NEWS_FEED_NEWSMAKER_ADD_IMAGE(data = {}) {
     s += '</div>';
     
     s += '<div class="File">';
-    s += '<img title="Select Image!" src="/images/icons/plus.png" onclick="NEWS_FEED_NEWSMAKER_ShowImageLibrary(' + "'" + data.source + "'" + ', this)" />';
+    s += '<img title="Select Image!" src="' + (data.source || '/images/icons/plus.png') +  '" onclick="NEWS_FEED_NEWSMAKER_ShowImageLibrary(' + "'" + data.source + "'" + ', this)" />';
     s += '<div></div>';
     s += '</div>';
 

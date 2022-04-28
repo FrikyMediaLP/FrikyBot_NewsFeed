@@ -52,7 +52,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         this.Config.AddSettingTemplates([
             { name: 'API_NEWS_FIRST_DEFAULT', type: 'number', default: 10, min: 0 },
             { name: 'API_CHANGELOG_FIRST_DEFAULT', type: 'number', default: 10, min: 0 },
-            { name: 'News_File_Dir', type: 'string', default: this.getMainPackageRoot() + this.getName() + "/custom_files/" },
+            { name: 'News_File_Dir', type: 'string', default: this.getMainPackageRoot() + this.getName() + "/custom_files" },
             { name: 'News_Dir', type: 'string', default: this.getMainPackageRoot() + this.getName() + "/data/" }
         ]);
         this.Config.Load();
@@ -302,12 +302,12 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         let StaticRouter = express.Router();
         StaticRouter.use("/", (req, res, next) => {
             let url = req.url.split('?')[0].toLowerCase();
+            let cfg = this.Config.GetConfig();
             
             if (url.startsWith('/custom/')) {
-                let page = PATH.resolve(cfg['News_File_Dir'] + url.substring(8));
-
                 try {
-                    if (fs.existsSync(page)) res.sendFile(page)
+                    let page = this.HTMLFileExists(url.substring(8), cfg['News_File_Dir']);
+                    if (page != "") res.sendFile(page);
                     else res.sendStatus(404);
                 } catch (err) {
                     res.sendStatus(404);
@@ -360,7 +360,8 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
 
     //News
     LoadNews() {
-        if (!this.NEWS_DATABASE) this.NEWS_DATABASE = new Datastore({ filename: PATH.resolve(this.getMainPackageRoot() + 'NewsFeed/News_Index.db'), autoload: true });
+        let cfg = this.GetConfig();
+        if (!this.NEWS_DATABASE) this.NEWS_DATABASE = new Datastore({ filename: PATH.resolve(cfg['News_Dir'] + 'News_Index.db'), autoload: true });
         else this.NEWS_DATABASE.loadDatabase();
     }
     async AddNews(news_data) {
@@ -588,7 +589,8 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
 
     //Changelog
     LoadChangelog() {
-        if (!this.CHANGELOG_DATABASE) this.CHANGELOG_DATABASE = new Datastore({ filename: PATH.resolve(this.getMainPackageRoot() + 'NewsFeed/Changelogs_Index.db'), autoload: true });
+        let cfg = this.GetConfig();
+        if (!this.CHANGELOG_DATABASE) this.CHANGELOG_DATABASE = new Datastore({ filename: PATH.resolve(cfg['News_Dir'] + 'Changelogs_Index.db'), autoload: true });
         else this.CHANGELOG_DATABASE.loadDatabase();
     }
     async AddChangelog(changelog_data) {
@@ -648,6 +650,13 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         let Changelogs = [];
         let pagination;
         let cfg = this.Config.GetConfig();
+
+        for (let p in params) {
+            if (p.charAt(0) === '?') {
+                params[p.substring(1)] = params[p];
+                delete params[p];
+            }
+        }
         
         //Scheduled
         if (include_scheduled == false) {
