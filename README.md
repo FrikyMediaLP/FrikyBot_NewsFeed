@@ -10,7 +10,6 @@ This Package is powered by Node.js and some NPM Modules.
 
 All dependancies are:
 * [express](https://www.npmjs.com/package/express) - providing File and API Routing Capabilities
-* [nedb](https://www.npmjs.com/package/nedb) - Database Manager (to be replaced with MongoDB "soon")
 
 Installing a Package is very easy! Clone this Package to your local machine, wrap it in Folder Named "NewsFeed" and drop that into your FrikyBot Packages Folder.
 Now use the FrikyBot WebInterface and add the Package on the Settings->Packages Page.
