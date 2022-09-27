@@ -84,6 +84,11 @@
                         .then(json => {
                             if (json.err) return Promise.reject(new Error('File List couldnt be read :('));
                             FILES = json.files;
+
+                            //Adjust Upload Limit
+                            if (json.upload_limit && json.upload_limit.split('mb').length > 0) {
+                                UPLOAD_LIMIT = parseInt(json.upload_limit.split('mb')[0]);
+                            }
                         })
                         .catch(err => {
                             OUTPUT_showError(err.message);

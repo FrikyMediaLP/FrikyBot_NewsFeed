@@ -1,12 +1,19 @@
 ﻿const express = require('express');
 const PATH = require('path');
 const fs = require('fs');
-const Datastore = require('nedb');
+
+const FrikyDB = require('./../../Util/FrikyDB.js');
 
 const PACKAGE_DETAILS = {
     name: "NewsFeed",
     description: "News Feed used to Share Updates and Informations on recent Events.",
-    picture: "/images/icons/newspaper-solid.svg"
+    picture: "/images/icons/newspaper-solid.svg",
+    version: '0.4.0.0',
+    server: '0.4.0.0',
+    modules: {
+        webapp: '0.4.0.0'
+    },
+    packages: []
 };
 const COOKIES = {
     SessionStorage: [
@@ -41,6 +48,11 @@ const API_ENDPOINT_PARAMETERS = {
     }
 };
 
+const SUPPORTED_IMG_FILES = ['png', 'jpg', 'jpeg', 'gif', 'mp4'];
+const SUPPORTED_VIDEO_FILES = ['mp4'];
+const SUPPORTED_SOUND_FILES = ['ogg', 'mp3', 'wav'];
+const SUPPORTED_FILES = SUPPORTED_IMG_FILES.concat(SUPPORTED_SOUND_FILES);
+
 class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
     constructor(webappinteractor, twitchirc, twitchapi, logger) {
         super(PACKAGE_DETAILS, webappinteractor, twitchirc, twitchapi, logger);
@@ -52,7 +64,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         this.Config.AddSettingTemplates([
             { name: 'API_NEWS_FIRST_DEFAULT', type: 'number', default: 10, min: 0 },
             { name: 'API_CHANGELOG_FIRST_DEFAULT', type: 'number', default: 10, min: 0 },
-            { name: 'News_File_Dir', type: 'string', default: this.getMainPackageRoot() + this.getName() + "/custom_files" },
+            { name: 'News_File_Dir', type: 'string', default: this.getMainPackageRoot() + this.getName() + "/custom_files/" },
             { name: 'News_Dir', type: 'string', default: this.getMainPackageRoot() + this.getName() + "/data/" }
         ]);
         this.Config.Load();
@@ -118,7 +130,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
             }
         });
         super.setAuthenticatedAPIEndpoint('/', { user_level: 'moderator' }, async (req, res) => {
-            let news_data = req.body;
+            let news_data = req.body['news_data'];
 
             let dta = this.validateNews(news_data);
 
@@ -182,9 +194,16 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
                 res.json({ err: "Internal Error." });
             }
         });
+        super.setAuthenticatedAPIEndpoint('/Changelog/full', { user_level: 'moderator' }, async (req, res) => {
+            try {
+                res.json({ data: await this.getChangelogs(req.query, true) });
+            } catch (err) {
+                res.json({ err: "Internal Error." });
+            }
+        }, 'GET');
         super.setAuthenticatedAPIEndpoint('/Changelog', { user_level: 'moderator' }, async (req, res) => {
-            let changelog_data = req.body;
-
+            let changelog_data = req.body.changelog_data;
+            
             let dta = this.validateChangelog(changelog_data);
 
             if (dta == true) {
@@ -192,6 +211,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
                     await this.AddChangelog(changelog_data);
                     res.json({ state: "Changelog saved!" });
                 } catch (err) {
+                    console.log(err);
                     res.json({ err: "Changelog save failed!" });
                 }
             } else {
@@ -231,10 +251,10 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         }, 'PUT');
 
         //Custom Files
-        APIRouter.get('/files', (req, res, next) => {
-            res.json({ files: this.GetCustomFiles() });
+        super.setAuthenticatedAPIEndpoint('/files', { user_level: 'moderator' }, (req, res, next) => {
+            res.json({ files: this.GetCustomFiles(), upload_limit: this.WebAppInteractor.GetUploadLimit() });
         });
-        APIRouter.post('/files', (req, res, next) => {
+        super.setAuthenticatedAPIEndpoint('/files', { user_level: 'moderator' }, (req, res, next) => {
             let file_info = req.body['file_info'];
             if (!file_info) return res.json({ err: 'File Info not supplied!' });
 
@@ -278,8 +298,8 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
             }
 
             res.sendStatus(500);
-        });
-        APIRouter.delete('/files', (req, res, next) => {
+        }, 'POST');
+        super.setAuthenticatedAPIEndpoint('/files', { user_level: 'moderator' }, (req, res, next) => {
             let cfg = this.Config.GetConfig();
             let file = PATH.resolve(cfg['News_File_Dir'] + req.body['file']);
 
@@ -294,7 +314,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
                 console.log(err);
                 res.sendStatus(500);
             }
-        });
+        }, 'PUT');
 
         super.setAPIRouter(APIRouter);
         
@@ -361,8 +381,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
     //News
     LoadNews() {
         let cfg = this.GetConfig();
-        if (!this.NEWS_DATABASE) this.NEWS_DATABASE = new Datastore({ filename: PATH.resolve(cfg['News_Dir'] + 'News_Index.db'), autoload: true });
-        else this.NEWS_DATABASE.loadDatabase();
+        if (!this.NEWS_DATABASE) this.NEWS_DATABASE = new FrikyDB.Collection({ path: PATH.resolve(cfg['News_Dir'] + 'News_Index.db') });
     }
     async AddNews(news_data) {
         if (!news_data) return Promise.reject(new Error('News Data not found'));
@@ -370,18 +389,13 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         if (!news_data.page) return Promise.reject(new Error('News Page Identifier not found'));
         
         try {
-            let news = await this.AccessNeDB(this.NEWS_DATABASE, { page: news_data.page });
+            let news = await this.AccessFrikyDB(this.NEWS_DATABASE, { page: news_data.page });
             if (news.length > 0) return Promise.reject(new Error('News Page Identifier allready in use'));
         } catch (err) {
             return Promise.reject(err);
         }
 
-        return new Promise((resolve, reject) => {
-            this.NEWS_DATABASE.insert(news_data, function (err, newDoc) {
-                if (err) return reject(new Error(err));
-                else return resolve(newDoc);
-            });
-        });
+        return this.NEWS_DATABASE.insert(news_data);
     }
     async EditNews(news_data, old_page) {
         if (!news_data) return Promise.reject(new Error('News Data not found'));
@@ -391,30 +405,18 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         //Oldpage Exists Check
         if (old_page !== news_data.page) {
             try {
-                let news = await this.AccessNeDB(this.NEWS_DATABASE, { page: old_page });
+                let news = await this.AccessFrikyDB(this.NEWS_DATABASE, { page: old_page });
                 if (news.length > 0) return Promise.reject(new Error("News Page already exists!"));
             } catch (err) {
                 return Promise.reject(err);
             }
         }
-
-        return new Promise((resolve, reject) => {
-            this.NEWS_DATABASE.update({ page: old_page || news_data.page }, news_data, {}, function (err, numReplaced) {
-                if (err) return reject(new Error(err));
-                else if (numReplaced == 0) return reject(new Error("News failed to be changed!"));
-                else return resolve(numReplaced);
-            });
-        });
+        
+        return this.NEWS_DATABASE.update({ page: old_page || news_data.page }, news_data);
     }
     async RemoveNews(page) {
         if (!page) return Promise.reject(new Error('Page not found'));
-
-        return new Promise((resolve, reject) => {
-            this.NEWS_DATABASE.remove({ page }, {}, function (err, numRemoved) {
-                if (err) return reject(new Error(err));
-                else return resolve(numRemoved);
-            });
-        });
+        return this.NEWS_DATABASE.remove({ page });
     }
     
     async getNews(params, include_scheduled = false) {
@@ -433,7 +435,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         
         //Fetch
         try {
-            News = await this.AccessNeDB(this.NEWS_DATABASE, this.createNEDBQuery('news', params));
+            News = await this.AccessFrikyDB(this.NEWS_DATABASE, this.createNEDBQuery('news', params));
         } catch (err) {
             return Promise.reject(err);
         }
@@ -455,10 +457,6 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
             News = News.slice(0, cfg['API_NEWS_FIRST_DEFAULT']);
         }
 
-        for (let nws of News) {
-            delete nws['_id'];
-        }
-
         return Promise.resolve({ News, pagination });
     }
     async getOldestNews(params, include_scheduled = false) {
@@ -477,7 +475,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
 
         //Fetch
         try {
-            News = await this.AccessNeDB(this.NEWS_DATABASE, this.createNEDBQuery('oldest-news', params));
+            News = await this.AccessFrikyDB(this.NEWS_DATABASE, this.createNEDBQuery('oldest-news', params));
         } catch (err) {
             return Promise.reject(err);
         }
@@ -498,10 +496,6 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
             }
         } else {
             News = News.slice(0, cfg['API_NEWS_FIRST_DEFAULT']);
-        }
-
-        for (let nws of News) {
-            delete nws['_id'];
         }
 
         return Promise.resolve({ News, pagination });
@@ -590,8 +584,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
     //Changelog
     LoadChangelog() {
         let cfg = this.GetConfig();
-        if (!this.CHANGELOG_DATABASE) this.CHANGELOG_DATABASE = new Datastore({ filename: PATH.resolve(cfg['News_Dir'] + 'Changelogs_Index.db'), autoload: true });
-        else this.CHANGELOG_DATABASE.loadDatabase();
+        if (!this.CHANGELOG_DATABASE) this.CHANGELOG_DATABASE = new FrikyDB.Collection({ path: PATH.resolve(cfg['News_Dir'] + 'Changelogs_Index.db') });
     }
     async AddChangelog(changelog_data) {
         if (!changelog_data) return Promise.reject(new Error('Changelog Data not found'));
@@ -599,18 +592,13 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         if (!changelog_data.page) return Promise.reject(new Error('Changelog Page Identifier not found'));
 
         try {
-            let changelogs = await this.AccessNeDB(this.CHANGELOG_DATABASE, { page: changelog_data.page });
+            let changelogs = await this.AccessFrikyDB(this.CHANGELOG_DATABASE, { page: changelog_data.page });
             if (changelogs.length > 0) return Promise.reject(new Error('Changelog Page Identifier allready in use'));
         } catch (err) {
             return Promise.reject(err);
         }
 
-        return new Promise((resolve, reject) => {
-            this.CHANGELOG_DATABASE.insert(changelog_data, function (err, newDoc) {
-                if (err) return reject(new Error(err));
-                else return resolve(newDoc);
-            });
-        });
+        return this.CHANGELOG_DATABASE.insert(changelog_data);
     }
     async EditChangelog(changelog_data, old_page) {
         if (!changelog_data) return Promise.reject(new Error('Changelog Data not found'));
@@ -620,30 +608,19 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         //Oldpage Exists Check
         if (old_page !== changelog_data.page) {
             try {
-                let news = await this.AccessNeDB(this.CHANGELOG_DATABASE, { page: old_page });
+                let news = await this.AccessFrikyDB(this.CHANGELOG_DATABASE, { page: old_page });
                 if (news.length > 0) return Promise.reject(new Error("Changelog Page already exists!"));
             } catch (err) {
                 return Promise.reject(err);
             }
         }
 
-        return new Promise((resolve, reject) => {
-            this.CHANGELOG_DATABASE.update({ page: old_page || changelog_data.page }, changelog_data, {}, function (err, numReplaced) {
-                if (err) return reject(new Error(err));
-                else if (numReplaced == 0) return reject(new Error("Changelog failed to be changed!"));
-                else return resolve(numReplaced);
-            });
-        });
+        return this.CHANGELOG_DATABASE.update({ page: old_page || changelog_data.page }, changelog_data);
     }
     async RemoveChangelog(page) {
         if (!page) return Promise.reject(new Error('Page not found'));
 
-        return new Promise((resolve, reject) => {
-            this.CHANGELOG_DATABASE.remove({ page }, {}, function (err, numRemoved) {
-                if (err) return reject(new Error(err));
-                else return resolve(numRemoved);
-            });
-        });
+        return this.CHANGELOG_DATABASE.remove({ page });
     }
     
     async getChangelogs(params, include_scheduled = false) {
@@ -672,7 +649,7 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
 
         //Fetch
         try {
-            Changelogs = await this.AccessNeDB(this.CHANGELOG_DATABASE, query);
+            Changelogs = await this.AccessFrikyDB(this.CHANGELOG_DATABASE, query);
         } catch (err) {
             return Promise.reject(err);
         }
@@ -692,10 +669,6 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
             }
         } else {
             Changelogs = Changelogs.slice(0, cfg['API_CHANGELOG_FIRST_DEFAULT']);
-        }
-
-        for (let nws of Changelogs) {
-            delete nws['_id'];
         }
 
         return Promise.resolve({ Changelogs, pagination });
@@ -796,4 +769,5 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
     }
 }
 
+module.exports.DETAILS = PACKAGE_DETAILS;
 module.exports.NewsFeed = NewsFeed;

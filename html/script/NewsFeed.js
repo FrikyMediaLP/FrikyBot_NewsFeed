@@ -27,6 +27,7 @@ function NEWS_FEED_Settings(settings) {
         NEWS_FEED_SETTINGS[key] = settings[key];
     }
 }
+let UPLOAD_LIMIT = 3;
 
 ////////////////////////////////////
 //          API STUFF
@@ -356,7 +357,7 @@ function NEWS_FEED_NEWSMAKER_fill(news) {
     if (year < 10) year = "0" + year;
 
     let month = date.getMonth();
-    if (month < 10) month = "0" + month;
+    if (month < 10) month = "0" + (month + 1);
 
     let dt = date.getDate();
     if (dt < 10) dt = "0" + dt;
@@ -448,7 +449,7 @@ function NEWS_FEED_NEWSMAKER_ADD_IMAGE(data = {}) {
 }
 function NEWS_FEED_NEWSMAKER_ShowImageLibrary(selected, elt) {
     FILE_LIB_ELT = elt;
-    elt.parentElement.childNodes[1].innerHTML = MISC_createFileLibrary(FILES, '/News/Custom/', 'Select News Image', 'images', selected === 'undefined' ? null : selected, null, null, '/api/News/files', 'NEWS_FEED_NEWSMAKER_FileLibChange');
+    elt.parentElement.childNodes[1].innerHTML = MISC_createFileLibrary(FILES, '/News/Custom/', 'Select News Image', 'images', selected === 'undefined' ? null : selected, null, null, '/api/News/files', 'NEWS_FEED_NEWSMAKER_FileLibChange', UPLOAD_LIMIT);
 }
 function NEWS_FEED_NEWSMAKER_FileLibChange(file) {
     if (FILE_LIB_ELT.src.split('/').pop() === file) {
@@ -463,6 +464,10 @@ function NEWS_FEED_NEWSMAKER_FileLibChange(file) {
     FILE_LIB_ELT.setAttribute('onclick', 'NEWS_FEED_NEWSMAKER_ShowImageLibrary("' + file + '", this)');
     FILE_LIB_ELT.parentElement.childNodes[1].innerHTML = "";
     FILE_LIB_ELT = null;
+
+    if (file !== '' && FILES.find(elt => elt === file) === undefined) {
+        FILES.push(file);
+    }
 }
 
 function NEWS_FEED_NEWSMAKER_ADD_MISC(data = {}) {

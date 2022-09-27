@@ -287,6 +287,12 @@
                 border-color: black;
             }
 
+            .CHANGELOG .CHANGES .UTIL.FRIKYDB .IMG img {
+                background-color: #32a852;
+                border-color: white;
+                filter: invert(0);
+            }
+
         .CHANGELOG .CHANGES .ThirdParty {
             background-color: #5d6afc;
             color: white;

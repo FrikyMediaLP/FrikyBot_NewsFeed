@@ -302,7 +302,7 @@
 
         #NEWS_FEED_FullPage .News_Feed_Images div {
             display: grid;
-            grid-template-columns: 25% 25% 25% 25%;
+            grid-template-columns: calc(25% - 1.25px) calc(25% - 1.25px) calc(25% - 1.25px) calc(25% - 1.25px);
             grid-template-rows: auto;
             grid-column-gap: 5px;
             grid-row-gap: 5px;
@@ -433,22 +433,22 @@
                         margin-right: 5px;
                     }
 
-        #NEWS_FEED_NewsMaker .Editor button {
-            background-color: #ededed;
-            height: 30px;
-            width: 30px;
-            border: none;
-            font-size: 25px;
-            cursor: pointer;
-        }
+#NEWS_FEED_NewsMaker .Editor .List > button {
+    background-color: #ededed;
+    height: 30px;
+    width: 30px;
+    border: none;
+    font-size: 25px;
+    cursor: pointer;
+}
 
-            #NEWS_FEED_NewsMaker .Editor button img {
-                margin-top: 3px;
-            }
+    #NEWS_FEED_NewsMaker .Editor .List > button img {
+        margin-top: 3px;
+    }
 
-            #NEWS_FEED_NewsMaker .Editor button:hover {
-                background-color: #d4d4d4;
-            }
+    #NEWS_FEED_NewsMaker .Editor .List > button:hover {
+        background-color: #d4d4d4;
+    }
 
         #NEWS_FEED_NewsMaker .Editor .TrashElement {
             background-color: #ededed;
@@ -487,11 +487,15 @@
             background-color: rgba(0, 0, 0, 0.3);
         }
 
-    #NEWS_FEED_NewsMaker .Editor .NEWS_FEED_NEWSMAKER_IMAGE > .Middle > .File > div{
-        background-color: white;
-        width: 300px;
-        z-index: 1;
-        position: absolute;
-        top: 0;
-        left: 60px;
-    }
+        #NEWS_FEED_NewsMaker .Editor .NEWS_FEED_NEWSMAKER_IMAGE > .Middle > .File > div {
+            background-color: white;
+            width: 30vw;
+            z-index: 1;
+            position: absolute;
+            top: 0;
+            left: 60px;
+        }
+
+            #NEWS_FEED_NewsMaker .Editor .NEWS_FEED_NEWSMAKER_IMAGE > .Middle > .File > div > .MISC_FILE_LIBRARY {
+                height: 50vh;
+            }

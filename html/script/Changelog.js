@@ -34,7 +34,8 @@ const CHANGELOG_CUSTOMS = {
     UTIL: {
         CONSTANTS: ["CONSTANTS", "images/icons/address-card-regular.svg"],
         CONFIGHANDLER: ["CONFIGHANDLER", "images/icons/clipboard-list-solid.svg"],
-        LOGGER: ["LOGGER", "images/icons/pen-solid.svg"]
+        LOGGER: ["LOGGER", "images/icons/pen-solid.svg"],
+        FRIKYDB: ["FRIKYDB", "images/Profiles/blue_transparent.png"]
     },
     "ThirdParty": {
         "3rdParty": ["UNKOWN 3rdParty", "images/icons/external-link-alt-solid.svg"],
@@ -48,8 +49,8 @@ const CHANGELOG_CUSTOMS = {
 ////////////////////////////////////
 
 //API
-async function fetchChangelog(query = "") {
-    return fetch(CHANGLOG_SETTINGS.API_ENDPOINT + (query ? '?' + query : ''), getAuthHeader())
+async function fetchChangelog(query = "", full = false) {
+    return fetch(CHANGLOG_SETTINGS.API_ENDPOINT + (full ? '/full' : '') + (query ? '?' + query : ''), getAuthHeader())
         .then(STANDARD_FETCH_RESPONSE_CHECKER)
         .then(json => {
             return Promise.resolve(json.data);
