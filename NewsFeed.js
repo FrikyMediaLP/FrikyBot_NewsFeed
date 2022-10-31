@@ -8,7 +8,7 @@ const PACKAGE_DETAILS = {
     name: "NewsFeed",
     description: "News Feed used to Share Updates and Informations on recent Events.",
     picture: "/images/icons/newspaper-solid.svg",
-    version: '0.4.0.0',
+    version: '0.4.1.0',
     server: '0.4.0.0',
     modules: {
         webapp: '0.4.0.0'
@@ -222,7 +222,8 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
         }, 'POST');
         super.setAuthenticatedAPIEndpoint('/Changelog', { user_level: 'moderator' }, async (req, res) => {
             try {
-                res.json({ removed: await this.RemoveChangelog(req.body.page) });
+                await this.RemoveChangelog(req.body.page);
+                res.sendStatus(200);
             } catch (err) {
                 if (err.message !== 'Changelog Data not found' && err.message !== 'Changelog Data not in the correct format' && err.message !== 'Changelog Page Identifier not found') res.json({ err: "Internal Error." });
                 else res.json({ err: err.message });
@@ -314,14 +315,14 @@ class NewsFeed extends require('./../../Util/PackageBase.js').PackageBase {
                 console.log(err);
                 res.sendStatus(500);
             }
-        }, 'PUT');
+        }, 'DELETE');
 
         super.setAPIRouter(APIRouter);
         
         //STATIC FILE ROUTE
         let StaticRouter = express.Router();
         StaticRouter.use("/", (req, res, next) => {
-            let url = req.url.split('?')[0].toLowerCase();
+            let url = decodeURI(req.url.split('?')[0].toLowerCase());
             let cfg = this.Config.GetConfig();
             
             if (url.startsWith('/custom/')) {

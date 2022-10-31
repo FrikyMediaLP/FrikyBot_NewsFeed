@@ -197,11 +197,10 @@
             return fetch(CHANGLOG_SETTINGS.API_ENDPOINT, options)
                 .then(STANDARD_FETCH_RESPONSE_CHECKER)
                 .then(json => {
-                    if (json.removed > 0) {
-                        OUTPUT_showInfo('Changelog Removed! Go back to <a href="/News/Changelog">All Changelogs</a>');
-                        document.getElementById('CHANGELOG').remove();
-                    }
-                    else OUTPUT_showError('Changelog couldnt be removed!');
+                    if (json.err) return Promise.reject(new Error(json.err));
+
+                    OUTPUT_showInfo('Changelog Removed! Go back to <a href="/News/Changelog">All Changelogs</a>');
+                    document.getElementById('CHANGELOG').remove();
                 })
                 .catch(err => {
                     OUTPUT_showError(err.message);
@@ -216,7 +215,7 @@
             fetchChangelog(scheduled ? "" : '&end=' + Date.now())
                 .then(json => {
                     let s = "";
-                    for (let changelog of json.Changelogs) {
+                    for (let changelog of json.Changelogs.reverse()) {
                         s += '<div class="Changelog">' + createChangelog(changelog) + '</div>';
                     }
                     if (s === "") s = '<center class="NO_CHANGELOGS">NO CHANGELOGS FOUND</center>';

@@ -21,7 +21,17 @@ let NEWS_FEED_SETTINGS = {
     DEFAULT_LINK_TARGET: "_blank",
     ROOT_URL: "/api/News"
 };
-
+const NEWS_FEED_MISC_ICONS = [
+    { name: 'paper clip', value: '/images/icons/paperclip-solid.svg' },
+    { name: 'refresh', value: '/images/icons/refresh.svg' },
+    { name: 'poll', value: '/images/icons/poll.svg' },
+    { name: 'home', value: '/images/icons/home.svg' },
+    { name: 'chat', value: '/images/icons/chat.svg' },
+    { name: 'play', value: '/images/icons/play-solid.svg' },
+    { name: 'twitter', value: '/images/icons/twitter.svg' },
+    { name: 'twitch', value: '/images/icons/twitch.svg' },
+    { name: 'custom', value: 'custom' }
+];
 function NEWS_FEED_Settings(settings) {
     for (key in settings) {
         NEWS_FEED_SETTINGS[key] = settings[key];
@@ -63,8 +73,8 @@ async function NEWS_FEED_FETCH_Feed(endpoint, querry, replace) {
             
             if (document.getElementById("NEWS_FEED_Feed") && News && Array.isArray(News)) {
                 let s = "";
-
-                for (let news of News) {
+                
+                for (let news of News.reverse()) {
                     if (NEWS_FEED_SETTINGS.reversed) {
                         s = NEWS_FEED_createFeed(news) + s;
                     } else {
@@ -333,7 +343,7 @@ function NEWS_FEED_NEWSMAKER_generateJSON() {
             icon: misc.childNodes[1].childNodes[1].value ? misc.childNodes[1].childNodes[1].value : "",
             type: misc.childNodes[1].childNodes[3].childNodes[0].value ? misc.childNodes[1].childNodes[3].childNodes[0].value : ""
         };
-
+        
         if (misc_json.type == "link") {
             misc_json.link = misc.childNodes[1].childNodes[3].childNodes[1].value ? misc.childNodes[1].childNodes[3].childNodes[1].value : "";
             misc_json.target = misc.childNodes[1].childNodes[3].childNodes[2].value ? misc.childNodes[1].childNodes[3].childNodes[2].value : "";
@@ -416,21 +426,21 @@ function NEWS_FEED_NEWSMAKER_ADD_IMAGE(data = {}) {
     s += '<div class="Middle">';
 
     s += '<div>';
-    s += '<input placeholder="Title here" value="' + (data.title || "") + '"/>';
+    s += '<input placeholder="Title here" value="' + (data.title || "") + '" oninput="NEWS_FEED_NEWSMAKER_updatePreview()" />';
     s += '<br />';
-    s += '<input placeholder="Link here" value="' + (data.link || "") + '"/>';
+    s += '<input placeholder="Link here" value="' + (data.link || "") + '" oninput="NEWS_FEED_NEWSMAKER_updatePreview()" />';
 
     const types = ['_blank', '_self', '_parent', '_top'];
     s += '<select>';
     for (let typ of types) {
-        s += '<option value="' + typ + '" ' + (data.target === typ ? 'selected' : '') + '>' + typ + '</option>';
+        s += '<option value="' + typ + '" ' + (data.target === typ ? 'selected' : '') + ' onchange="NEWS_FEED_NEWSMAKER_updatePreview()" >' + typ + '</option>';
     }
 
     s += '</select>';
     s += '</div>';
     
     s += '<div class="File">';
-    s += '<img title="Select Image!" src="' + (data.source || '/images/icons/plus.png') +  '" onclick="NEWS_FEED_NEWSMAKER_ShowImageLibrary(' + "'" + data.source + "'" + ', this)" />';
+    s += '<img title="Select Image!" src="' + (data.source || '/images/icons/plus.png') +  '" onclick="NEWS_FEED_NEWSMAKER_ShowImageLibrary(' + "'" + data.source + "'" + ', this, event)" />';
     s += '<div></div>';
     s += '</div>';
 
@@ -447,7 +457,16 @@ function NEWS_FEED_NEWSMAKER_ADD_IMAGE(data = {}) {
     elt.innerHTML = s;
     document.getElementById("Image_List").append(elt);
 }
-function NEWS_FEED_NEWSMAKER_ShowImageLibrary(selected, elt) {
+function NEWS_FEED_NEWSMAKER_ShowImageLibrary(selected, elt, e) {
+    if (FILE_LIB_ELT) {
+        FILE_LIB_ELT.parentElement.childNodes[1].innerHTML = "";
+    }
+    
+    if (FILE_LIB_ELT === elt) {
+        FILE_LIB_ELT = null;
+        return;
+    }
+
     FILE_LIB_ELT = elt;
     elt.parentElement.childNodes[1].innerHTML = MISC_createFileLibrary(FILES, '/News/Custom/', 'Select News Image', 'images', selected === 'undefined' ? null : selected, null, null, '/api/News/files', 'NEWS_FEED_NEWSMAKER_FileLibChange', UPLOAD_LIMIT);
 }
@@ -468,13 +487,23 @@ function NEWS_FEED_NEWSMAKER_FileLibChange(file) {
     if (file !== '' && FILES.find(elt => elt === file) === undefined) {
         FILES.push(file);
     }
+
+    NEWS_FEED_NEWSMAKER_updatePreview();
 }
 
 function NEWS_FEED_NEWSMAKER_ADD_MISC(data = {}) {
     let s = '<center>' + (document.getElementsByClassName(NEWS_FEED_NEWSMAKER_ELEMENTS.misc_class).length + 1) + '</center>';
-    s += '<div>';
-    s += '<input placeholder="Text here" value="' + (data.text || "") + '"/>';
-    s += '<input placeholder="Icon Source here" value="' + (data.icon || 'images/icons/paperclip-solid.svg') + '"/>';
+    s += '<div  class="Middle">';
+    s += '<input placeholder="Text here" value="' + (data.text || "") + '" oninput="NEWS_FEED_NEWSMAKER_updatePreview()" />';
+
+    if (data.icon === undefined || NEWS_FEED_MISC_ICONS.find(elt => elt.value === data.icon)) {
+        s += '<select onchange="NEWS_FEED_NEWSMAKER_MISC_ICON_Change(this)">';
+        for (let opt of NEWS_FEED_MISC_ICONS) s += '<option value="' + opt.value + '" ' + (data.icon !== undefined && opt.value === data.icon ? 'selected' : '') + '>' + opt.name + '</option>';
+        s += '</select>';
+    } else {
+        s += '<input placeholder="Icon Source here" value="' + (data.icon || '/images/icons/paperclip-solid.svg') + '" onchange="NEWS_FEED_NEWSMAKER_updatePreview()" />';
+    }
+    
     s += '<br />';
     s += '<div>';
     s += NEWS_FEED_NEWSMAKER_MISC_create_select(data.type);
@@ -493,6 +522,17 @@ function NEWS_FEED_NEWSMAKER_ADD_MISC(data = {}) {
     elt.innerHTML = s;
     document.getElementById("Misc_List").append(elt);
 }
+function NEWS_FEED_NEWSMAKER_MISC_ICON_Change(x) {
+    if (x.value === 'custom') {
+        let div = document.createElement('DIV');
+        div.innerHTML = '<input placeholder="Icon Source here" value="/images/icons/paperclip-solid.svg" onchange="NEWS_FEED_NEWSMAKER_updatePreview()" />';
+        x.parentElement.insertBefore(div.childNodes[0], x);
+        div.remove();
+        x.remove();
+    }
+
+    NEWS_FEED_NEWSMAKER_updatePreview();
+}
 function NEWS_FEED_NEWSMAKER_MISC_Change(x) {
     x.parentElement.innerHTML = NEWS_FEED_NEWSMAKER_MISC_create_select(x.value) + NEWS_FEED_NEWSMAKER_MISC_create_content(x.value);
 }
@@ -509,18 +549,18 @@ function NEWS_FEED_NEWSMAKER_MISC_create_select(selected) {
 function NEWS_FEED_NEWSMAKER_MISC_create_content(type, data = {}) {
     let content = "";
     if (type == "link") {
-        content = '<input type="text" placeholder="link in here" value="' + (data.link || '') + '"/>';
+        content = '<input type="text" placeholder="link in here" value="' + (data.link || '') + '" onchange="NEWS_FEED_NEWSMAKER_updatePreview()" />';
 
         const types = ['_blank', '_self', '_parent', '_top'];
-        content += '<select>';
+        content += '<select onchange="NEWS_FEED_NEWSMAKER_updatePreview()">';
         for (let typ of types) {
             content += '<option value="' + typ + '" ' + (data.target === typ ? 'selected' : '') + '>' + typ + '</option>';
         }
         content += '</select>';
     } else if (type == "color") {
-        content = '<input type="text" placeholder="color here!" />';
+        content = '<input type="text" placeholder="color here!" onchange="NEWS_FEED_NEWSMAKER_updatePreview()" />';
     } else if (type == "size") {
-        content = '<input type="text" placeholder="size here! (px and em only)" />';
+        content = '<input type="text" placeholder="size here! (px and em only)" onchange="NEWS_FEED_NEWSMAKER_updatePreview()" />';
     }
     return content;
 }
@@ -570,6 +610,8 @@ function NEWS_FEED_NEWSMAKER_dropTrash(event) {
         elte.id = elte.id.sub(0, elte.id.indexOf("_") + 1) + (++i);
         elte.childNodes[0].innerHTML = i;
     }
+
+    NEWS_FEED_NEWSMAKER_updatePreview();
 }
 function NEWS_FEED_NEWSMAKER_dropSwap(event) {
     event.preventDefault();
@@ -620,6 +662,8 @@ function NEWS_FEED_NEWSMAKER_dropSwap(event) {
             }
         }
     }
+
+    NEWS_FEED_NEWSMAKER_updatePreview();
 }
 
 function NEWS_FEED_NEWSMAKER_Title_Change(x) {

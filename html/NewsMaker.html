@@ -114,6 +114,15 @@
                             console.log(err);
                         });
                 }
+
+                document.addEventListener('click', (e) => {
+                    let has_file_lib_parent = FindHTMLParent(e.target, (parent) => parent.classList.contains('File'));
+
+                    if (!has_file_lib_parent && FILE_LIB_ELT) {
+                        FILE_LIB_ELT.parentElement.childNodes[1].innerHTML = "";
+                        FILE_LIB_ELT = null;
+                    }
+                });
             </script>
 
             <output></output>
@@ -133,7 +142,6 @@
                     <div>
                         <div class="List">
                             <h4>Images</h4>
-                            <button style="grid-area: bt0; background-color: lime; width: 100%; font-size: 15px;" title="Update Images" onclick="NEWS_FEED_NEWSMAKER_updatePreview()">UPDATE</button>
                             <div class="TrashElement" title="Remove Image" ondragover="NEWS_FEED_NEWSMAKER_allowDrop(event)" ondrop="NEWS_FEED_NEWSMAKER_dropTrash(event)"><img src="../images/icons/trash-alt-solid.svg" /></div>
                             <button style="grid-area: bt2;" title="Add Image" onclick="NEWS_FEED_NEWSMAKER_ADD_IMAGE()">+</button>
                             <div id="Image_List">
@@ -142,7 +150,6 @@
                         </div>
                         <div class="List" style="grid-area: list;">
                             <h4>Misc</h4>
-                            <button style="grid-area: bt0; background-color: lime; width: 100%; font-size: 15px;" title="Update Images" onclick="NEWS_FEED_NEWSMAKER_updatePreview()">UPDATE</button>
                             <div class="TrashElement" title="Remove Misc" ondragover="NEWS_FEED_NEWSMAKER_allowDrop(event)" ondrop="NEWS_FEED_NEWSMAKER_dropTrash(event)"><img src="../images/icons/trash-alt-solid.svg" /></div>
                             <button style="grid-area: bt2;" title="Add Misc" onclick="NEWS_FEED_NEWSMAKER_ADD_MISC()">+</button>
                             <div id="Misc_List">
